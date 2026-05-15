@@ -33,11 +33,6 @@ export const removePost = createAsyncThunk('posts/remove', async (id, { rejectWi
   catch (e) { return rejectWithValue(e.message); }
 });
 
-export const loadComments = createAsyncThunk('posts/loadComments', async (postId, { rejectWithValue }) => {
-  try { return await api.fetchCommentsByPost(postId); }
-  catch (e) { return rejectWithValue(e.message); }
-});
-
 // ─── Slice ─────────────────────────────────────────────────────────────────────
 
 const postsSlice = createSlice({
@@ -45,7 +40,6 @@ const postsSlice = createSlice({
   initialState: {
     items: [],
     currentPost: null,
-    currentComments: [],
     userPosts: [],
     loading: false,
     error: null,
@@ -57,7 +51,7 @@ const postsSlice = createSlice({
     setSearchQuery(state, action) { state.searchQuery = action.payload; },
     setFilterUserId(state, action) { state.filterUserId = action.payload; },
     setSortBy(state, action) { state.sortBy = action.payload; },
-    clearCurrentPost(state) { state.currentPost = null; state.currentComments = []; },
+    clearCurrentPost(state) { state.currentPost = null; },
     clearError(state) { state.error = null; },
   },
   extraReducers: (builder) => {
@@ -98,12 +92,7 @@ const postsSlice = createSlice({
         s.loading = false;
         s.items = s.items.filter(p => p.id !== a.payload);
       })
-      .addCase(removePost.rejected, (s, a) => { s.loading = false; s.error = a.payload; })
-
-    // loadComments
-      .addCase(loadComments.pending,  (s) => { s.loading = true; })
-      .addCase(loadComments.fulfilled,(s, a) => { s.loading = false; s.currentComments = a.payload; })
-      .addCase(loadComments.rejected, (s, a) => { s.loading = false; s.error = a.payload; });
+      .addCase(removePost.rejected, (s, a) => { s.loading = false; s.error = a.payload; });
   },
 });
 
@@ -119,8 +108,11 @@ export const selectFilteredPosts = (state) => {
       p.title.toLowerCase().includes(q) || p.body.toLowerCase().includes(q)
     );
   }
-  result.sort((a, b) => sortBy === 'title' ? a.title.localeCompare(b.title) : a.id - b.id);
-  return result;
+  return result.sort((a, b) => {
+    if (sortBy === 'id') return b.id - a.id;
+    if (sortBy === 'date') return new Date(b.createdAt) - new Date(a.createdAt);
+    return 0;
+  });
 };
 
 export const { setSearchQuery, setFilterUserId, setSortBy, clearCurrentPost, clearError } = postsSlice.actions;

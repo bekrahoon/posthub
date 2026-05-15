@@ -10,12 +10,11 @@ export default function PostForm({ initialData, onClose }) {
   const [form, setForm] = useState({
     title: initialData?.title || '',
     body: initialData?.body || '',
-    userId: initialData?.userId || 1,
   });
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    if (initialData) setForm({ title: initialData.title, body: initialData.body, userId: initialData.userId });
+    if (initialData) setForm({ title: initialData.title, body: initialData.body });
   }, [initialData]);
 
   const validate = () => {
@@ -38,8 +37,8 @@ export default function PostForm({ initialData, onClose }) {
     if (Object.keys(e).length) { setErrors(e); return; }
 
     const action = initialData
-      ? editPost({ id: initialData.id, data: { ...form, userId: Number(form.userId) } })
-      : addPost({ ...form, userId: Number(form.userId) });
+      ? editPost({ id: initialData.id, data: { ...form } })
+      : addPost({ ...form });
 
     const result = await dispatch(action);
     if (!result.error) onClose();
@@ -47,13 +46,6 @@ export default function PostForm({ initialData, onClose }) {
 
   return (
     <div className="post-form">
-      <div className="form-group">
-        <label className="form-label">Author</label>
-        <select name="userId" className="form-select" value={form.userId} onChange={handleChange}>
-          {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-        </select>
-      </div>
-
       <div className="form-group">
         <label className="form-label">Title</label>
         <input

@@ -11,11 +11,14 @@ export default function HomePage() {
   const dispatch = useDispatch();
   const { items: posts, loading: pLoading, error: pError } = useSelector(s => s.posts);
   const { items: users, loading: uLoading } = useSelector(s => s.users);
+  const { token } = useSelector(s => s.auth);
 
   useEffect(() => {
-    if (!posts.length) dispatch(loadPosts());
-    if (!users.length) dispatch(loadUsers());
-  }, []);
+    if (token) {
+      if (!posts.length) dispatch(loadPosts());
+      if (!users.length) dispatch(loadUsers());
+    }
+  }, [token]);
 
   const loading = pLoading || uLoading;
   if (loading && !posts.length) return <LoadingSpinner size="lg" text="Loading dashboard…" />;
